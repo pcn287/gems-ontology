@@ -1,0 +1,2256 @@
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:  <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:  <http://www.w3.org/2001/XMLSchema#> .
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix dct:  <http://purl.org/dc/terms/> .
+@prefix vann: <http://purl.org/vocab/vann/> .
+@prefix obo:  <http://purl.obolibrary.org/obo/> .
+@prefix atol: <http://opendata.inra.fr/ATOL/> .
+@prefix lho:  <http://www.purl.org/decide/LiveStockHealthOnto/LHO#> .
+@prefix gems: <https://w3id.org/gems/ontology#> .
+
+# GEMS ontology: what the tables of the GEMS GreenFeed database mean.
+# Classes are the kinds of record (study, animal, diet, GreenFeed visit, milk, intake, ...), datatype properties
+# are the columns, and object properties are the links between records. Columns are mapped to public ontology
+# terms (LHO, ATOL, ChEBI, PATO, CMO, FoodOn, ENVO, OBI, TO, LBO, NCIT) with skos:exactMatch / skos:closeMatch
+# where a match exists; the rest are GEMS-only terms.
+# Data records use IDs under https://w3id.org/gems/id/. This file holds no animal data.
+
+<https://w3id.org/gems/ontology>
+    a owl:Ontology ;
+    dct:title "GEMS GreenFeed Emissions Measurement System ontology"@en ;
+    dct:description "Classes, properties and links for the GEMS database of enteric methane measurements made with GreenFeed systems, with the animal, diet, intake and milk records collected alongside them. Columns are mapped to public ontology terms where a match exists."@en ;
+    dct:creator "Puchun Niu" ,
+        "Miel Hostens" ,
+        "Hanlu Zhang" ;
+    dct:bibliographicCitation "Niu P, Hostens M, Zhang H. GEMS ontology, version 0.2.0. https://w3id.org/gems/ontology" ;
+    dct:license <https://creativecommons.org/licenses/by/4.0/> ;
+    dct:issued "2026-11-10"^^xsd:date ;
+    owl:versionIRI <https://w3id.org/gems/ontology/0.2.0> ;
+    owl:versionInfo "0.2.0" ;
+    vann:preferredNamespacePrefix "gems" ;
+    vann:preferredNamespaceUri "https://w3id.org/gems/ontology#" .
+
+#################################################################
+# Annotation properties
+#################################################################
+
+gems:fromTable a owl:AnnotationProperty ;
+    rdfs:label "from table"@en ;
+    rdfs:comment "Gold table name (lowercase, no spaces)."@en .
+
+gems:fromColumn a owl:AnnotationProperty ;
+    rdfs:label "from column"@en .
+
+gems:matchType a owl:AnnotationProperty ;
+    rdfs:label "match type"@en ;
+    rdfs:comment "exact | close | GEMS-only | lookup_ATOL, from the column map."@en .
+
+gems:unit a owl:AnnotationProperty ;
+    rdfs:label "unit"@en ;
+    rdfs:comment "Unit of the values, as given in the gold units row or the column name (e.g. kg, g/d, %)."@en .
+
+gems:hasAnalyte a owl:AnnotationProperty ;
+    rdfs:label "has analyte"@en ;
+    rdfs:comment "Chemical entity being measured (ChEBI). Used with gas mass-flow columns."@en .
+
+gems:hasQuality a owl:AnnotationProperty ;
+    rdfs:label "has quality"@en ;
+    rdfs:comment "PATO quality of the measurement (e.g. mass flow rate, temperature)."@en .
+
+gems:hasTrait a owl:AnnotationProperty ;
+    rdfs:label "has trait"@en ;
+    rdfs:comment "Livestock or clinical measurement class (ATOL/CMO) for the phenotype."@en .
+
+#################################################################
+# Core classes
+#################################################################
+
+gems:Study a owl:Class ;
+    rdfs:label "study"@en ;
+    rdfs:comment "A GEMS trial (the thing). This class is a kind of OBI investigation. The spreadsheet column studyId is only the local code for this Study, not the investigation class."@en ;
+    rdfs:subClassOf obo:OBI_0000066 .
+
+gems:Animal a owl:Class ;
+    rdfs:label "study animal"@en ;
+    rdfs:comment "An animal in a GEMS study, keyed by studyId + AnimalIdentifier."@en .
+
+gems:Treatment a owl:Class ;
+    rdfs:label "experimental treatment"@en ;
+    rdfs:comment "GEMS treatment code/name within one study. Not ENVO animal feed."@en .
+
+gems:Diet a owl:Class ;
+    rdfs:label "offered diet"@en ;
+    rdfs:comment "Ration fed under one treatment of a study."@en .
+
+gems:DietComponent a owl:Class ;
+    rdfs:label "diet ingredient"@en ;
+    rdfs:subClassOf obo:FOODON_00002403 ;
+    rdfs:comment "One ingredient of a treatment diet, with its proportion and nutrient content (goldfeedcomponents row)."@en .
+
+gems:DietNutrientRecord a owl:Class ;
+    rdfs:label "diet nutrient composition"@en ;
+    rdfs:comment "Nutrient composition of a treatment diet on a date (golddietnutrientcomposition row)."@en .
+
+gems:BaitPellet a owl:Class ;
+    rdfs:label "GreenFeed bait pellet"@en ;
+    rdfs:comment "Bait, not the offered diet. Same nutrient analytes as diet, different sample. One per study."@en .
+
+gems:BaitPelletComponent a owl:Class ;
+    rdfs:label "bait pellet ingredient"@en ;
+    rdfs:subClassOf obo:FOODON_00002403 ;
+    rdfs:comment "One ingredient of the GreenFeed bait pellet (goldgreenfeedpelletcomponents row)."@en .
+
+gems:Observation a owl:Class ;
+    rdfs:label "observation"@en ;
+    rdfs:subClassOf <http://www.purl.org/decide#Measurement> ;
+    rdfs:comment "A measurement row: study + animal + time + variables. A kind of LHO Measurement."@en .
+
+gems:AnimalDayObservation a owl:Class ;
+    rdfs:label "animal-day observation"@en ;
+    rdfs:subClassOf gems:Observation ;
+    rdfs:comment "A measurement on one animal on one date (studyId + AnimalIdentifier + Date)."@en .
+
+gems:MilkObservation a owl:Class ;
+    rdfs:label "milk observation"@en ;
+    rdfs:subClassOf gems:AnimalDayObservation ;
+    rdfs:comment "Milk yield and composition of one animal on one date, or one milking when MilkingTime is given (goldmilk row)."@en .
+
+gems:BodyWeightObservation a owl:Class ;
+    rdfs:label "body weight observation"@en ;
+    rdfs:subClassOf gems:AnimalDayObservation ;
+    rdfs:comment "Body weight of one animal on one date (goldbodyweight row)."@en .
+
+gems:IntakeDayObservation a owl:Class ;
+    rdfs:label "daily intake observation"@en ;
+    rdfs:subClassOf gems:AnimalDayObservation ;
+    rdfs:comment "Feed and water intake of one animal on one date (goldintakeperday row)."@en .
+
+gems:DigestibilityObservation a owl:Class ;
+    rdfs:label "digestibility observation"@en ;
+    rdfs:subClassOf gems:AnimalDayObservation ;
+    rdfs:comment "Apparent digestibility and fecal/urine output of one animal for a collection date (golddigestibility row)."@en .
+
+gems:IntakeEvent a owl:Class ;
+    rdfs:label "feeding event"@en ;
+    rdfs:subClassOf gems:Observation ;
+    rdfs:comment "One feeding event of one animal (goldintakeintraday row)."@en .
+
+gems:GreenFeedVisit a owl:Class ;
+    rdfs:label "GreenFeed visit"@en ;
+    rdfs:subClassOf gems:Observation ;
+    rdfs:comment "One visit of an animal to a GreenFeed unit, identified by studyId + RFID + Start_Time (goldgreenfeedrawvisitationdata row plus the matching goldgreenfeedanimalcrosswalk columns). Linked to an animal only when matchOk is true; the link uses canonicalAnimalIdentifier, never the raw Farm_Name. Do not owl:sameAs raw strings."@en .
+
+gems:ChamberObservation a owl:Class ;
+    rdfs:label "respiration chamber observation"@en ;
+    rdfs:subClassOf gems:Observation ;
+    rdfs:comment "One respiration chamber reading of one animal at a time of day (goldrespirationchambermeasurement row)."@en .
+
+gems:DesignRecord a owl:Class ;
+    rdfs:label "experimental design record"@en ;
+    rdfs:comment "Experimental design of one animal on one date: treatment, period, phase, housing and feeding (goldexperimentaldesign row)."@en .
+
+gems:Instrument a owl:Class ;
+    rdfs:label "instrument"@en ;
+    rdfs:comment "GreenFeed unit or respiration chamber."@en .
+
+gems:GreenFeedUnit a owl:Class ;
+    rdfs:label "GreenFeed unit"@en ;
+    rdfs:subClassOf gems:Instrument ;
+    rdfs:comment "One GreenFeed unit used in a study, with its settings (goldgreenfeedsettings row)."@en .
+
+gems:RespirationChamber a owl:Class ;
+    rdfs:label "respiration chamber"@en ;
+    rdfs:subClassOf gems:Instrument ;
+    rdfs:comment "One respiration chamber used in a study."@en .
+
+gems:ChamberCalibration a owl:Class ;
+    rdfs:label "respiration chamber recovery test"@en ;
+    rdfs:comment "Gas recovery test of one respiration chamber on one date (goldrespirationchambersettings row)."@en .
+
+# Reused public classes. The IRI stays as published; Protégé shows rdfs:label, not the ID string.
+obo:OBI_0000066 a owl:Class ;
+    rdfs:label "investigation"@en ;
+    rdfs:comment "OBI investigation. gems:Study is a subclass. Do not rename the IRI."@en .
+
+obo:FOODON_00002403 a owl:Class ;
+    rdfs:label "feed ingredient"@en ;
+    rdfs:comment "FoodOn class food material (FOODON_00002403). Shown here as feed ingredient."@en .
+
+<http://www.purl.org/decide#Measurement> a owl:Class ;
+    rdfs:label "measurement"@en ;
+    rdfs:comment "LHO (Livestock Health Ontology V1.5) Measurement class. gems:Observation is a subclass. Do not rename the IRI."@en .
+
+#################################################################
+# Links between nodes (GEMS-local object properties)
+#################################################################
+
+gems:belongsToStudy a owl:ObjectProperty ;
+    rdfs:label "belongs to study"@en ;
+    rdfs:range gems:Study .
+
+gems:aboutAnimal a owl:ObjectProperty ;
+    rdfs:label "about animal"@en ;
+    rdfs:range gems:Animal ;
+    rdfs:comment "The animal a record is about. Rows link by studyId + AnimalIdentifier; GreenFeed visits by studyId + canonicalAnimalIdentifier, and only when matchOk is true."@en .
+
+gems:receivesTreatment a owl:ObjectProperty ;
+    rdfs:label "receives treatment"@en ;
+    rdfs:range gems:Treatment ;
+    rdfs:comment "Treatment the animal received on the date of this record (design or digestibility record). On the cow-day, not the animal, because animals can change treatment between periods."@en .
+
+gems:usesDiet a owl:ObjectProperty ;
+    rdfs:label "uses diet"@en ;
+    rdfs:domain gems:Treatment ;
+    rdfs:range gems:Diet .
+
+gems:hasIngredient a owl:ObjectProperty ;
+    rdfs:label "has ingredient"@en ;
+    rdfs:range obo:FOODON_00002403 ;
+    rdfs:comment "A diet or bait pellet and one of its ingredient lines."@en .
+
+gems:aboutDiet a owl:ObjectProperty ;
+    rdfs:label "about diet"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range gems:Diet .
+
+gems:recordedBy a owl:ObjectProperty ;
+    rdfs:label "recorded by"@en ;
+    rdfs:range gems:Instrument ;
+    rdfs:comment "Instrument that recorded an observation (GreenFeed unit through FID, chamber through ChamberIdentification)."@en .
+
+gems:aboutInstrument a owl:ObjectProperty ;
+    rdfs:label "about instrument"@en ;
+    rdfs:domain gems:ChamberCalibration ;
+    rdfs:range gems:Instrument .
+
+#################################################################
+# Identifier properties of core nodes (GEMS-local)
+#################################################################
+
+gems:studyId a owl:DatatypeProperty ;
+    rdfs:label "studyId"@en ;
+    rdfs:domain gems:Study ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Local accession string (e.g. 009). Identifies a Study. Not OBI investigation — that class is gems:Study."@en .
+
+gems:isOpenData a owl:DatatypeProperty ;
+    rdfs:label "is open data"@en ;
+    rdfs:domain gems:Study ;
+    rdfs:range xsd:boolean ;
+    rdfs:comment "True when the study's contributor agreed to open release (gold_v1.goldstudyaccess)."@en .
+
+gems:animalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "AnimalIdentifier"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    rdfs:comment "Study animal ID. Unique only together with studyId."@en .
+
+# Identifier matching is data hygiene on goldgreenfeedanimalcrosswalk, always inside one studyId.
+# Do not rewrite Farm_Name on goldgreenfeedrawvisitationdata. A reasoner will not infer padded IDs.
+
+#################################################################
+# Column properties (generated from column_term_map.xlsx and table_map.xlsx)
+#################################################################
+
+
+gems:col_animalcharacteristics_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_animalcharacteristics_AnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "study animal identifier"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "AnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local barn/study ID. Join with studyId. Not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_animalcharacteristics_RadioFrequencyIdentification a owl:DatatypeProperty ;
+    rdfs:label "animal RFID / EID"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "RadioFrequencyIdentification" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Optional tag on characteristics. Variants: 984…, padded zeros, GF_short."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_animalcharacteristics_Breed a owl:DatatypeProperty ;
+    rdfs:label "breed"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "Breed" ;
+    gems:matchType "close" ;
+    rdfs:comment "LBO root class 'breed'. Map each breed value to a child (Holstein, Angus, ...) later. NCBITaxon is species, not breed."@en ;
+    skos:closeMatch obo:LBO_0000000 .
+
+gems:col_animalcharacteristics_ProductionType a owl:DatatypeProperty ;
+    rdfs:label "production type (dairy/beef/…)"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "ProductionType" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Search ATOL/EOL for dairy vs beef production context."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_animalcharacteristics_AnimalType a owl:DatatypeProperty ;
+    rdfs:label "animal type / species"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "AnimalType" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Keep GEMS-local: values may be cattle, calf, sheep, goat. Do not pin the column to Bos taurus."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_animalcharacteristics_BirthDate a owl:DatatypeProperty ;
+    rdfs:label "BirthEvent"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:date ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "BirthDate" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 BirthEvent; the column is the date of that event, so close. xsd:date."@en ;
+    skos:closeMatch lho:BirthEvent .
+
+gems:col_animalcharacteristics_Age a owl:DatatypeProperty ;
+    rdfs:label "Age"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:double ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "Age" ;
+    gems:matchType "exact" ;
+    rdfs:comment "LHO V1.5 Age (measurement type). Replaces ATOL age (ATOL_0000088)."@en ;
+    skos:exactMatch lho:Age ;
+    gems:hasQuality obo:PATO_0000011 .
+
+gems:col_animalcharacteristics_AnimalStatus a owl:DatatypeProperty ;
+    rdfs:label "physiological/lactation status"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "AnimalStatus" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Search ATOL for lactating, dry, pregnant."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_animalcharacteristics_Parity a owl:DatatypeProperty ;
+    rdfs:label "parity / number of lactations"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:integer ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "Parity" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Search ATOL for parity."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_animalcharacteristics_DaysInMilk a owl:DatatypeProperty ;
+    rdfs:label "stage of lactation"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:integer ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "DaysInMilk" ;
+    gems:matchType "exact" ;
+    rdfs:comment "ATOL stage of lactation; exact synonym DIM / days in milk. CattlePresent in ATOL."@en ;
+    skos:exactMatch atol:ATOL_0005297 .
+
+gems:col_animalcharacteristics_Cannulation a owl:DatatypeProperty ;
+    rdfs:label "cannulation status"@en ;
+    rdfs:domain gems:Animal ;
+    rdfs:range xsd:string ;
+    gems:fromTable "animalcharacteristics" ;
+    gems:fromColumn "Cannulation" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Surgical/experimental status, not a production trait."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_bodyweight_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:BodyWeightObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "bodyweight" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_bodyweight_AnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "study animal identifier"@en ;
+    rdfs:domain gems:BodyWeightObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "bodyweight" ;
+    gems:fromColumn "AnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local barn/study ID. Join with studyId. Not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_bodyweight_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:BodyWeightObservation ;
+    rdfs:range xsd:date ;
+    gems:fromTable "bodyweight" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_bodyweight_BodyWeight a owl:DatatypeProperty ;
+    rdfs:label "Weight"@en ;
+    rdfs:domain gems:BodyWeightObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "bodyweight" ;
+    gems:fromColumn "BodyWeight" ;
+    gems:matchType "close" ;
+    gems:unit "kg" ;
+    rdfs:comment "LHO V1.5 Weight (measurement type). LHO has no body-weight term, so close. Gold unit legend row __UNITS__ gives the unit."@en ;
+    skos:closeMatch lho:Weight .
+
+gems:col_dietnutrientcomposition_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_dietnutrientcomposition_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:date ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_dietnutrientcomposition_Treatment a owl:DatatypeProperty ;
+    rdfs:label "experimental treatment"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "Treatment" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GEMS treatment code/name. Links diet and animals. ENVO:02000047 is animal feed — not used."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_dietnutrientcomposition_ProportionForage a owl:DatatypeProperty ;
+    rdfs:label "forage proportion of diet"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "ProportionForage" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "%" ;
+    rdfs:comment "Diet structure, not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_dietnutrientcomposition_ProportionConcentrate a owl:DatatypeProperty ;
+    rdfs:label "concentrate proportion of diet"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "ProportionConcentrate" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "%" ;
+    rdfs:comment "Diet structure, not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_dietnutrientcomposition_OrganicMatter a owl:DatatypeProperty ;
+    rdfs:label "organic molecular entity"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "OrganicMatter" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "OM (g/kg) of the offered diet. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing). Close, not exact: the lab measure (crude protein = N x 6.25, ether extract, OM by ashing) is broader than the CHEBI chemical class."@en ;
+    skos:closeMatch obo:CHEBI_50860 .
+
+gems:col_dietnutrientcomposition_CrudeProtein a owl:DatatypeProperty ;
+    rdfs:label "protein"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "CrudeProtein" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Crude protein of the offered diet. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing). Close, not exact: the lab measure (crude protein = N x 6.25, ether extract, OM by ashing) is broader than the CHEBI chemical class."@en ;
+    skos:closeMatch obo:CHEBI_36080 .
+
+gems:col_dietnutrientcomposition_EtherExtract a owl:DatatypeProperty ;
+    rdfs:label "lipid"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "EtherExtract" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Ether extract / fat of the offered diet. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing). Close, not exact: the lab measure (crude protein = N x 6.25, ether extract, OM by ashing) is broader than the CHEBI chemical class."@en ;
+    skos:closeMatch obo:CHEBI_18059 .
+
+gems:col_dietnutrientcomposition_NeutralDetergentFiber a owl:DatatypeProperty ;
+    rdfs:label "neutral detergent fiber content"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "NeutralDetergentFiber" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "NDF of the offered diet. Plant Trait Ontology class for this Van Soest lab fraction in plant/feed material. Not an ATOL animal trait. Same analyte mapping as diet and pellet."@en ;
+    skos:exactMatch obo:TO_0001148 .
+
+gems:col_dietnutrientcomposition_AcidDetergentFiber a owl:DatatypeProperty ;
+    rdfs:label "acid detergent fiber content"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "AcidDetergentFiber" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "ADF of the offered diet. Plant Trait Ontology class for this Van Soest lab fraction in plant/feed material. Not an ATOL animal trait. Same analyte mapping as diet and pellet."@en ;
+    skos:exactMatch obo:TO_0002641 .
+
+gems:col_dietnutrientcomposition_Lignin a owl:DatatypeProperty ;
+    rdfs:label "lignin"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "Lignin" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Lignin of the offered diet. CHEBI lignin (chemical class)."@en ;
+    skos:exactMatch obo:CHEBI_6457 .
+
+gems:col_dietnutrientcomposition_Starch a owl:DatatypeProperty ;
+    rdfs:label "starch"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "Starch" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Starch of the offered diet. CHEBI starch (chemical class)."@en ;
+    skos:exactMatch obo:CHEBI_28017 .
+
+gems:col_dietnutrientcomposition_GrossEnergy a owl:DatatypeProperty ;
+    rdfs:label "gross energy of diet"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "GrossEnergy" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "MJ/kg DM" ;
+    rdfs:comment "Diet GE; not animal GE digestibility."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_dietnutrientcomposition_NeutralDetergentFiberOrganicMatter a owl:DatatypeProperty ;
+    rdfs:label "polysaccharide (NDFom, close)"@en ;
+    rdfs:domain gems:DietNutrientRecord ;
+    rdfs:range xsd:double ;
+    gems:fromTable "dietnutrientcomposition" ;
+    gems:fromColumn "NeutralDetergentFiberOrganicMatter" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "NDFom (NDF on an OM basis). No dedicated TO/ATOL class filled; keep GEMS-local. Parent idea: TO NDF content."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_digestibility_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_digestibility_AnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "study animal identifier"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "AnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local barn/study ID. Join with studyId. Not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_digestibility_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:date ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_digestibility_Treatment a owl:DatatypeProperty ;
+    rdfs:label "experimental treatment"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "Treatment" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GEMS treatment code/name. Links diet and animals. ENVO:02000047 is animal feed — not used."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_digestibility_GrossEnergyDigestibility a owl:DatatypeProperty ;
+    rdfs:label "gross energy digestibility"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "GrossEnergyDigestibility" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "%" ;
+    rdfs:comment "No ATOL IRI filled; keep GEMS-local. Related: ATOL energy intake is not digestibility."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_digestibility_MetabolizableEnergyDigestibility a owl:DatatypeProperty ;
+    rdfs:label "metabolizable energy"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "MetabolizableEnergyDigestibility" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "%" ;
+    rdfs:comment "No ATOL IRI filled; keep GEMS-local."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_digestibility_DryMatterDigestibility a owl:DatatypeProperty ;
+    rdfs:label "dry matter digestibility"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "DryMatterDigestibility" ;
+    gems:matchType "close" ;
+    gems:unit "%" ;
+    rdfs:comment "Plant Trait Ontology DMD. GEMS is animal-level digestibility, so match is close (same quantity name, different kingdom)."@en ;
+    skos:closeMatch obo:TO_0002644 .
+
+gems:col_digestibility_OrganicMatterDigestibility a owl:DatatypeProperty ;
+    rdfs:label "organic matter digestibility"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "OrganicMatterDigestibility" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL organic matter digestibility."@en ;
+    skos:exactMatch atol:ATOL_0001234 .
+
+gems:col_digestibility_CrudeProteinDigestibility a owl:DatatypeProperty ;
+    rdfs:label "protein digestibility"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "CrudeProteinDigestibility" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL protein digestibility (CP digestibility)."@en ;
+    skos:exactMatch atol:ATOL_0001246 .
+
+gems:col_digestibility_EtherExtractDigestibility a owl:DatatypeProperty ;
+    rdfs:label "lipid digestibility"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "EtherExtractDigestibility" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL lipid / fat digestibility (ether extract)."@en ;
+    skos:exactMatch atol:ATOL_0001249 .
+
+gems:col_digestibility_NeutralDetergentFiberDigestibility a owl:DatatypeProperty ;
+    rdfs:label "NDF digestibility"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "NeutralDetergentFiberDigestibility" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL NDF digestibility."@en ;
+    skos:exactMatch atol:ATOL_0001240 .
+
+gems:col_digestibility_AcidDetergentFiberDigestibility a owl:DatatypeProperty ;
+    rdfs:label "ADF digestibility"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "AcidDetergentFiberDigestibility" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL ADF digestibility."@en ;
+    skos:exactMatch atol:ATOL_0001242 .
+
+gems:col_digestibility_StarchDigestibility a owl:DatatypeProperty ;
+    rdfs:label "starch digestibility"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "StarchDigestibility" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL starch digestibility."@en ;
+    skos:exactMatch atol:ATOL_0001236 .
+
+gems:col_digestibility_FecalEnergy a owl:DatatypeProperty ;
+    rdfs:label "fecal energy"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "FecalEnergy" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "MJ/d" ;
+    rdfs:comment "No ATOL IRI filled; keep GEMS-local until a fecal energy class is confirmed."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_digestibility_FecalNitrogen a owl:DatatypeProperty ;
+    rdfs:label "fecal nitrogen content"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "FecalNitrogen" ;
+    gems:matchType "close" ;
+    gems:unit "g/d" ;
+    rdfs:comment "ATOL feces nitrogen content (ATOL_0001419). Close, not exact: gold stores g/d (daily output), ATOL term is content. Not CHEBI nitrogen atom."@en ;
+    skos:closeMatch atol:ATOL_0001419 .
+
+gems:col_digestibility_UrineNitrogen a owl:DatatypeProperty ;
+    rdfs:label "urine nitrogen content"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "UrineNitrogen" ;
+    gems:matchType "close" ;
+    gems:unit "g/d" ;
+    rdfs:comment "ATOL urine nitrogen content (ATOL_0001509), under urine nitrogenous component content. Close, not exact: gold stores g/d (daily output), ATOL term is content."@en ;
+    skos:closeMatch atol:ATOL_0001509 .
+
+gems:col_digestibility_UrineCarbon a owl:DatatypeProperty ;
+    rdfs:label "UrineCarbon"@en ;
+    rdfs:domain gems:DigestibilityObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "digestibility" ;
+    gems:fromColumn "UrineCarbon" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "g/d" ;
+    rdfs:comment "No ATOL/CHEBI class confirmed for urine C; keep GEMS-local."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_AnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "study animal identifier"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "AnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local barn/study ID. Join with studyId. Not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:date ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_experimentaldesign_Period a owl:DatatypeProperty ;
+    rdfs:label "experimental period"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "Period" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Trial period label."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_ExperimentalPhase a owl:DatatypeProperty ;
+    rdfs:label "experimental phase"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "ExperimentalPhase" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "e.g. covariate, adaptation, measurement."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_ExperimentalDesign a owl:DatatypeProperty ;
+    rdfs:label "study design"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "ExperimentalDesign" ;
+    gems:matchType "close" ;
+    rdfs:comment "OBI study design (Latin square, etc.). Refine to a child class if a closer term exists."@en ;
+    skos:closeMatch obo:OBI_0500000 .
+
+gems:col_experimentaldesign_Treatment a owl:DatatypeProperty ;
+    rdfs:label "experimental treatment"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "Treatment" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GEMS treatment code/name. Links diet and animals. ENVO:02000047 is animal feed — not used."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_MethaneInhibitingFeedAdditive a owl:DatatypeProperty ;
+    rdfs:label "chemical entity (additive)"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "MethaneInhibitingFeedAdditive" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI chemical entity as a placeholder; map 3-NOP, nitrate, etc. to specific CHEBI later."@en ;
+    skos:closeMatch obo:CHEBI_24431 .
+
+gems:col_experimentaldesign_MethaneInhibitingFeedAdditiveDose a owl:DatatypeProperty ;
+    rdfs:label "additive dose"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "MethaneInhibitingFeedAdditiveDose" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Quantity; not an ATOL trait."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_ApplicationOfFeedAdditive a owl:DatatypeProperty ;
+    rdfs:label "additive application method"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "ApplicationOfFeedAdditive" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "How the additive was applied."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_Housing a owl:DatatypeProperty ;
+    rdfs:label "agricultural ecosystem"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "Housing" ;
+    gems:matchType "close" ;
+    rdfs:comment "Broad ENVO agricultural ecosystem (barn, feedlot, pasture). Map specific values later. Not ENVO:00000070 human construction."@en ;
+    skos:closeMatch obo:ENVO_00000077 .
+
+gems:col_experimentaldesign_FeedRegimen a owl:DatatypeProperty ;
+    rdfs:label "feed regimen"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "FeedRegimen" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Management of feeding (TMR, grazing, etc.)."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_Feeding a owl:DatatypeProperty ;
+    rdfs:label "feeding method"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "Feeding" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "How feed is offered; confirm vs FeedRegimen in template."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_experimentaldesign_ExperimentalLocation a owl:DatatypeProperty ;
+    rdfs:label "Location"@en ;
+    rdfs:domain gems:DesignRecord ;
+    rdfs:range xsd:string ;
+    gems:fromTable "experimentaldesign" ;
+    gems:fromColumn "ExperimentalLocation" ;
+    gems:matchType "close" ;
+    rdfs:comment "NCIT Location (NCIT_C25341), the location class LHO V1.5 uses. Values are research sites with a country."@en ;
+    skos:closeMatch obo:NCIT_C25341 .
+
+gems:col_feedcomponents_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_feedcomponents_Treatment a owl:DatatypeProperty ;
+    rdfs:label "experimental treatment"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "Treatment" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GEMS treatment code/name. Links diet and animals."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_feedcomponents_Ingredients a owl:DatatypeProperty ;
+    rdfs:label "food material"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "Ingredients" ;
+    gems:matchType "close" ;
+    rdfs:comment "Ingredient name. Map each value (corn silage, hay) to a FoodOn class later."@en ;
+    skos:closeMatch obo:FOODON_00002403 .
+
+gems:col_feedcomponents_Proportion a owl:DatatypeProperty ;
+    rdfs:label "ingredient proportion"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "Proportion" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "%" ;
+    rdfs:comment "Fraction of diet; not a chemical class."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_feedcomponents_OrganicMatter a owl:DatatypeProperty ;
+    rdfs:label "organic molecular entity"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "OrganicMatter" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "OM % of the diet ingredient. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing)."@en ;
+    skos:closeMatch obo:CHEBI_50860 .
+
+gems:col_feedcomponents_CrudeProtein a owl:DatatypeProperty ;
+    rdfs:label "protein"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "CrudeProtein" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Crude protein of the diet ingredient. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing)."@en ;
+    skos:closeMatch obo:CHEBI_36080 .
+
+gems:col_feedcomponents_EtherExtract a owl:DatatypeProperty ;
+    rdfs:label "lipid"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "EtherExtract" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Ether extract / fat of the diet ingredient. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing)."@en ;
+    skos:closeMatch obo:CHEBI_18059 .
+
+gems:col_feedcomponents_NeutralDetergentFiber a owl:DatatypeProperty ;
+    rdfs:label "neutral detergent fiber content"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "NeutralDetergentFiber" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "NDF of the diet ingredient. Plant Trait Ontology class for this Van Soest lab fraction in plant/feed material. Not an ATOL animal trait. Same analyte mapping as diet and pellet."@en ;
+    skos:exactMatch obo:TO_0001148 .
+
+gems:col_feedcomponents_AcidDetergentFiber a owl:DatatypeProperty ;
+    rdfs:label "acid detergent fiber content"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "AcidDetergentFiber" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "ADF of the diet ingredient. Plant Trait Ontology class for this Van Soest lab fraction in plant/feed material. Not an ATOL animal trait. Same analyte mapping as diet and pellet."@en ;
+    skos:exactMatch obo:TO_0002641 .
+
+gems:col_feedcomponents_Lignin a owl:DatatypeProperty ;
+    rdfs:label "lignin"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "Lignin" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Lignin of the diet ingredient. CHEBI lignin (chemical class)."@en ;
+    skos:exactMatch obo:CHEBI_6457 .
+
+gems:col_feedcomponents_Starch a owl:DatatypeProperty ;
+    rdfs:label "starch"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "Starch" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Starch of the diet ingredient. CHEBI starch (chemical class)."@en ;
+    skos:exactMatch obo:CHEBI_28017 .
+
+gems:col_feedcomponents_AmylaseNeutralDetergentFiber a owl:DatatypeProperty ;
+    rdfs:label "polysaccharide (aNDF, close)"@en ;
+    rdfs:domain gems:DietComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "feedcomponents" ;
+    gems:fromColumn "AmylaseNeutralDetergentFiber" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "aNDF method variant. No dedicated class filled; keep GEMS-local. Parent idea: TO NDF content."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedpelletcomponents_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedpelletcomponents_GreenFeedBaitIngredients a owl:DatatypeProperty ;
+    rdfs:label "food material"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "GreenFeedBaitIngredients" ;
+    gems:matchType "close" ;
+    rdfs:comment "Bait pellet ingredient name. Same FoodOn mapping pattern as feed ingredients."@en ;
+    skos:closeMatch obo:FOODON_00002403 .
+
+gems:col_greenfeedpelletcomponents_Proportion a owl:DatatypeProperty ;
+    rdfs:label "ingredient proportion"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "Proportion" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Fraction of diet; not a chemical class."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedpelletcomponents_OrganicMatter a owl:DatatypeProperty ;
+    rdfs:label "organic molecular entity"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "OrganicMatter" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "OM (g/kg) of the GreenFeed bait pellet. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing). Close, not exact: the lab measure (crude protein = N x 6.25, ether extract, OM by ashing) is broader than the CHEBI chemical class."@en ;
+    skos:closeMatch obo:CHEBI_50860 .
+
+gems:col_greenfeedpelletcomponents_CrudeProtein a owl:DatatypeProperty ;
+    rdfs:label "protein"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "CrudeProtein" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Crude protein of the GreenFeed bait pellet. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing). Close, not exact: the lab measure (crude protein = N x 6.25, ether extract, OM by ashing) is broader than the CHEBI chemical class."@en ;
+    skos:closeMatch obo:CHEBI_36080 .
+
+gems:col_greenfeedpelletcomponents_EtherExtract a owl:DatatypeProperty ;
+    rdfs:label "lipid"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "EtherExtract" ;
+    gems:matchType "close" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Ether extract / fat of the GreenFeed bait pellet. IRI is the CHEBI chemical class (analyte), not the lab method (Kjeldahl CP, ether extract, OM ashing). Close, not exact: the lab measure (crude protein = N x 6.25, ether extract, OM by ashing) is broader than the CHEBI chemical class."@en ;
+    skos:closeMatch obo:CHEBI_18059 .
+
+gems:col_greenfeedpelletcomponents_NeutralDetergentFiber a owl:DatatypeProperty ;
+    rdfs:label "neutral detergent fiber content"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "NeutralDetergentFiber" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "NDF of the GreenFeed bait pellet. Plant Trait Ontology class for this Van Soest lab fraction in plant/feed material. Not an ATOL animal trait. Same analyte mapping as diet and pellet."@en ;
+    skos:exactMatch obo:TO_0001148 .
+
+gems:col_greenfeedpelletcomponents_AcidDetergentFiber a owl:DatatypeProperty ;
+    rdfs:label "acid detergent fiber content"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "AcidDetergentFiber" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "ADF of the GreenFeed bait pellet. Plant Trait Ontology class for this Van Soest lab fraction in plant/feed material. Not an ATOL animal trait. Same analyte mapping as diet and pellet."@en ;
+    skos:exactMatch obo:TO_0002641 .
+
+gems:col_greenfeedpelletcomponents_Starch a owl:DatatypeProperty ;
+    rdfs:label "starch"@en ;
+    rdfs:domain gems:BaitPelletComponent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedpelletcomponents" ;
+    gems:fromColumn "Starch" ;
+    gems:matchType "exact" ;
+    gems:unit "g/kg" ;
+    rdfs:comment "Starch of the GreenFeed bait pellet. CHEBI starch (chemical class)."@en ;
+    skos:exactMatch obo:CHEBI_28017 .
+
+gems:col_greenfeedrawvisitationdata_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_RFID a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed recorded RFID"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "RFID" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "May be padded EID or GF_short form. Link via identifier rule, not OWL equality."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Farm_Name a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed Farm_Name (intended AnimalIdentifier)"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Farm_Name" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Intended AnimalIdentifier. Do not join this raw string to milk/intake/bodyweight. Use goldgreenfeedanimalcrosswalk.canonicalAnimalIdentifier. Do not OWL-equate raw strings."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_FID a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed unit / feeder ID"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "FID" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Sensor box identifier, not the animal."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Start_Time a owl:DatatypeProperty ;
+    rdfs:label "visit start timestamp"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:dateTime ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Start_Time" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GreenFeed visit start."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_End_Time a owl:DatatypeProperty ;
+    rdfs:label "visit end timestamp"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:dateTime ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "End_Time" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GreenFeed visit end."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Good_Data_Duration a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed good-data duration"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Good_Data_Duration" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "hh:mm:ss" ;
+    rdfs:comment "QA length of usable visit, not a livestock trait."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Hour_Of_Day a owl:DatatypeProperty ;
+    rdfs:label "hour of day"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Hour_Of_Day" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "h" ;
+    rdfs:comment "Derived from visit time."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_CO2_Massflow_g_d a owl:DatatypeProperty ;
+    rdfs:label "digestive carbon dioxide production"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "CO2_Massflow_g_d" ;
+    gems:matchType "close" ;
+    gems:unit "g/d" ;
+    rdfs:comment "analyte=CHEBI:16526; quality=PATO:0002244; trait=ATOL_0001392 (close: GreenFeed exhaled CO2 mass flow, not gut-only CO2)."@en ;
+    skos:closeMatch atol:ATOL_0001392 ;
+    gems:hasAnalyte obo:CHEBI_16526 ;
+    gems:hasQuality obo:PATO_0002244 ;
+    gems:hasTrait atol:ATOL_0001392 .
+
+gems:col_greenfeedrawvisitationdata_CH4_Massflow_g_d a owl:DatatypeProperty ;
+    rdfs:label "digestive methane production"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "CH4_Massflow_g_d" ;
+    gems:matchType "close" ;
+    gems:unit "g/d" ;
+    rdfs:comment "analyte=CHEBI:16183; quality=PATO:0002244; trait=ATOL_0001391 (close: GreenFeed CH4 mass flow, not chamber emission)."@en ;
+    skos:closeMatch atol:ATOL_0001391 ;
+    gems:hasAnalyte obo:CHEBI_16183 ;
+    gems:hasQuality obo:PATO_0002244 ;
+    gems:hasTrait atol:ATOL_0001391 .
+
+gems:col_greenfeedrawvisitationdata_O2_Massflow_g_d a owl:DatatypeProperty ;
+    rdfs:label "oxygen consumption"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "O2_Massflow_g_d" ;
+    gems:matchType "close" ;
+    gems:unit "g/d" ;
+    rdfs:comment "analyte=CHEBI:15379; quality=PATO:0002244; trait=CMO_0002169 (close: GreenFeed O2 mass flow, not chamber VO2). CMO is clinical measurement, not ATOL."@en ;
+    skos:closeMatch obo:CMO_0002169 ;
+    gems:hasAnalyte obo:CHEBI_15379 ;
+    gems:hasQuality obo:PATO_0002244 ;
+    gems:hasTrait obo:CMO_0002169 .
+
+gems:col_greenfeedrawvisitationdata_H2_Massflow_g_d a owl:DatatypeProperty ;
+    rdfs:label "hydrogen production"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "H2_Massflow_g_d" ;
+    gems:matchType "close" ;
+    gems:unit "g/d" ;
+    rdfs:comment "analyte=CHEBI:18276; quality=PATO:0002244; trait=ATOL_0005127 (close: GreenFeed H2 mass flow)."@en ;
+    skos:closeMatch atol:ATOL_0005127 ;
+    gems:hasAnalyte obo:CHEBI_18276 ;
+    gems:hasQuality obo:PATO_0002244 ;
+    gems:hasTrait atol:ATOL_0005127 .
+
+gems:col_greenfeedrawvisitationdata_H2S_Massflow_g_d a owl:DatatypeProperty ;
+    rdfs:label "hydrogen sulfide production"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "H2S_Massflow_g_d" ;
+    gems:matchType "close" ;
+    gems:unit "g/d" ;
+    rdfs:comment "analyte=CHEBI:16136; quality=PATO:0002244; trait=ATOL_0005128 (close: GreenFeed H2S mass flow)."@en ;
+    skos:closeMatch atol:ATOL_0005128 ;
+    gems:hasAnalyte obo:CHEBI_16136 ;
+    gems:hasQuality obo:PATO_0002244 ;
+    gems:hasTrait atol:ATOL_0005128 .
+
+gems:col_greenfeedrawvisitationdata_Average_Airflow_L_s a owl:DatatypeProperty ;
+    rdfs:label "airflow rate"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Average_Airflow_L_s" ;
+    gems:matchType "close" ;
+    gems:unit "L/s" ;
+    rdfs:comment "NCIT airflow rate applied to the GreenFeed instrument, not a clinical test."@en ;
+    skos:closeMatch obo:NCIT_C210166 .
+
+gems:col_greenfeedrawvisitationdata_Airflow_CF a owl:DatatypeProperty ;
+    rdfs:label "airflow correction factor"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Airflow_CF" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "C-Lock correction, not a trait."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Average_Wind_Speed_m_s a owl:DatatypeProperty ;
+    rdfs:label "atmospheric wind speed"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Average_Wind_Speed_m_s" ;
+    gems:matchType "close" ;
+    gems:unit "m/s" ;
+    rdfs:comment "ENVO atmospheric wind speed at the GreenFeed visit."@en ;
+    skos:closeMatch obo:ENVO_01001362 .
+
+gems:col_greenfeedrawvisitationdata_Average_Wind_Direction_deg a owl:DatatypeProperty ;
+    rdfs:label "atmospheric wind direction"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Average_Wind_Direction_deg" ;
+    gems:matchType "close" ;
+    gems:unit "degree" ;
+    rdfs:comment "ENVO atmospheric wind direction (degrees) at the GreenFeed visit."@en ;
+    skos:closeMatch obo:ENVO_01001361 .
+
+gems:col_greenfeedrawvisitationdata_Wind_CF a owl:DatatypeProperty ;
+    rdfs:label "wind correction factor"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Wind_CF" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "C-Lock correction."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Was_Interrupted a owl:DatatypeProperty ;
+    rdfs:label "visit interrupted flag"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:boolean ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Was_Interrupted" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "QA flag."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Interrupting_Tags a owl:DatatypeProperty ;
+    rdfs:label "interrupting RFID tags"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Interrupting_Tags" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Other tags during visit."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Midpoint_Since_Last a owl:DatatypeProperty ;
+    rdfs:label "time since previous visit midpoint"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Midpoint_Since_Last" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "C-Lock derived interval."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Midpoint_Until_Next a owl:DatatypeProperty ;
+    rdfs:label "time until next visit midpoint"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Midpoint_Until_Next" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "C-Lock derived interval."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Standard_Deviation_of_CH4_Baseline a owl:DatatypeProperty ;
+    rdfs:label "CH4 baseline SD"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Standard_Deviation_of_CH4_Baseline" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Instrument QA, not emission trait."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedrawvisitationdata_Pipe_Temperature_deg_C a owl:DatatypeProperty ;
+    rdfs:label "temperature"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Pipe_Temperature_deg_C" ;
+    gems:matchType "close" ;
+    gems:unit "°C" ;
+    rdfs:comment "PATO temperature of the GreenFeed pipe."@en ;
+    skos:closeMatch obo:PATO_0000146 .
+
+gems:col_greenfeedrawvisitationdata_Gas_Temperature_deg_C a owl:DatatypeProperty ;
+    rdfs:label "temperature"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "Gas_Temperature_deg_C" ;
+    gems:matchType "close" ;
+    gems:unit "°C" ;
+    rdfs:comment "PATO temperature of GreenFeed sampled gas."@en ;
+    skos:closeMatch obo:PATO_0000146 .
+
+gems:col_greenfeedrawvisitationdata_RID a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed RID"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedrawvisitationdata" ;
+    gems:fromColumn "RID" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "C-Lock export field; keep GEMS-local until meaning is confirmed per study."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_GreenFeedUnitIdentifier a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed unit identifier"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "GreenFeedUnitIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Instrument ID."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_MaximumDropsPerVisit a owl:DatatypeProperty ;
+    rdfs:label "max bait drops per visit"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:integer ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "MaximumDropsPerVisit" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GreenFeed setting."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_AmountPerDrop a owl:DatatypeProperty ;
+    rdfs:label "bait amount per drop"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "AmountPerDrop" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GreenFeed setting."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_TimeBetweenDrops a owl:DatatypeProperty ;
+    rdfs:label "time between drops"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:integer ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "TimeBetweenDrops" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GreenFeed setting."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_TimeBetweenVisits a owl:DatatypeProperty ;
+    rdfs:label "time between visits"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:double ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "TimeBetweenVisits" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GreenFeed setting."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_SharedAccessToGreenFeed a owl:DatatypeProperty ;
+    rdfs:label "shared GreenFeed access"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "SharedAccessToGreenFeed" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Management setting."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_DailyAccessLevel a owl:DatatypeProperty ;
+    rdfs:label "daily access level"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "DailyAccessLevel" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GreenFeed setting."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedsettings_GasMeasurementLocation a owl:DatatypeProperty ;
+    rdfs:label "Location"@en ;
+    rdfs:domain gems:GreenFeedUnit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedsettings" ;
+    gems:fromColumn "GasMeasurementLocation" ;
+    gems:matchType "close" ;
+    rdfs:comment "NCIT Location (NCIT_C25341), the location class LHO V1.5 uses. Values are housing types (Freestall, Pasture, Feedlot)."@en ;
+    skos:closeMatch obo:NCIT_C25341 .
+
+gems:col_intakeintraday_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeintraday_AnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "study animal identifier"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "AnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local barn/study ID. Join with studyId. Not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeintraday_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:date ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_intakeintraday_FeedingEventStart a owl:DatatypeProperty ;
+    rdfs:label "feeding event start"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:time ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "FeedingEventStart" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Intraday intake interval."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeintraday_FeedingEventEnd a owl:DatatypeProperty ;
+    rdfs:label "feeding event end"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:time ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "FeedingEventEnd" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Intraday intake interval."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeintraday_DryMatterIntake a owl:DatatypeProperty ;
+    rdfs:label "dry matter intake"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "DryMatterIntake" ;
+    gems:matchType "exact" ;
+    gems:unit "kg/event" ;
+    rdfs:comment "CMO dry matter intake (feed excluding water, over a period). Broader livestock parent: ATOL_0000772 feed intake (no DMI class in this ATOL version)."@en ;
+    skos:exactMatch obo:CMO_0001313 .
+
+gems:col_intakeintraday_ForageIntake a owl:DatatypeProperty ;
+    rdfs:label "forage intake"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "ForageIntake" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "kg/event" ;
+    rdfs:comment "Narrower than DMI; no dedicated ATOL/CMO IRI filled. Keep GEMS-local."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeintraday_ConcentrateIntake a owl:DatatypeProperty ;
+    rdfs:label "concentrate intake"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "ConcentrateIntake" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "kg/event" ;
+    rdfs:comment "Narrower than DMI; no dedicated ATOL/CMO IRI filled. Keep GEMS-local."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeintraday_GrossEnergyIntake a owl:DatatypeProperty ;
+    rdfs:label "energy intake"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "GrossEnergyIntake" ;
+    gems:matchType "close" ;
+    gems:unit "MJ/event" ;
+    rdfs:comment "ATOL energy intake (not specifically gross energy). close, not exact."@en ;
+    skos:closeMatch atol:ATOL_0002557 .
+
+gems:col_intakeintraday_WaterIntake a owl:DatatypeProperty ;
+    rdfs:label "water intake"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "WaterIntake" ;
+    gems:matchType "exact" ;
+    gems:unit "L/event" ;
+    rdfs:comment "ATOL water intake trait. CHEBI water is the chemical, not this column."@en ;
+    skos:exactMatch atol:ATOL_0001529 .
+
+gems:col_intakeintraday_FeedingTime a owl:DatatypeProperty ;
+    rdfs:label "feeding duration or time"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "FeedingTime" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Confirm with template whether duration or clock time."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeintraday_FeedIntakeMeasurementMethod a owl:DatatypeProperty ;
+    rdfs:label "intake measurement method"@en ;
+    rdfs:domain gems:IntakeEvent ;
+    rdfs:range xsd:string ;
+    gems:fromTable "intakeintraday" ;
+    gems:fromColumn "FeedIntakeMeasurementMethod" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "How DMI was measured."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeperday_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeperday_AnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "study animal identifier"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "AnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local barn/study ID. Join with studyId. Not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeperday_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:date ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_intakeperday_DryMatterIntake a owl:DatatypeProperty ;
+    rdfs:label "dry matter intake"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "DryMatterIntake" ;
+    gems:matchType "exact" ;
+    gems:unit "kg/d" ;
+    rdfs:comment "CMO dry matter intake (feed excluding water, over a period). Broader livestock parent: ATOL_0000772 feed intake (no DMI class in this ATOL version)."@en ;
+    skos:exactMatch obo:CMO_0001313 .
+
+gems:col_intakeperday_ForageIntake a owl:DatatypeProperty ;
+    rdfs:label "forage intake"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "ForageIntake" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "kg/d" ;
+    rdfs:comment "Narrower than DMI; no dedicated ATOL/CMO IRI filled. Keep GEMS-local."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeperday_ConcentrateIntake a owl:DatatypeProperty ;
+    rdfs:label "concentrate intake"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "ConcentrateIntake" ;
+    gems:matchType "GEMS-only" ;
+    gems:unit "kg/d" ;
+    rdfs:comment "Narrower than DMI; no dedicated ATOL/CMO IRI filled. Keep GEMS-local."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeperday_GrossEnergyIntake a owl:DatatypeProperty ;
+    rdfs:label "energy intake"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "GrossEnergyIntake" ;
+    gems:matchType "close" ;
+    gems:unit "MJ/d" ;
+    rdfs:comment "ATOL energy intake (not specifically gross energy). close, not exact."@en ;
+    skos:closeMatch atol:ATOL_0002557 .
+
+gems:col_intakeperday_WaterIntake a owl:DatatypeProperty ;
+    rdfs:label "water intake"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "WaterIntake" ;
+    gems:matchType "exact" ;
+    gems:unit "L/d" ;
+    rdfs:comment "ATOL water intake trait. CHEBI water is the chemical, not this column."@en ;
+    skos:exactMatch atol:ATOL_0001529 .
+
+gems:col_intakeperday_FeedingTime a owl:DatatypeProperty ;
+    rdfs:label "feeding duration or time"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "FeedingTime" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Confirm with template whether duration or clock time."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_intakeperday_FeedIntakeMeasurementMethod a owl:DatatypeProperty ;
+    rdfs:label "intake measurement method"@en ;
+    rdfs:domain gems:IntakeDayObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "intakeperday" ;
+    gems:fromColumn "FeedIntakeMeasurementMethod" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "How DMI was measured."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_milk_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_milk_AnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "study animal identifier"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "AnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local barn/study ID. Join with studyId. Not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_milk_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:date ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_milk_MilkingTime a owl:DatatypeProperty ;
+    rdfs:label "milking time"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "MilkingTime" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Clock time of milking, not milk yield."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_milk_MilkProduction a owl:DatatypeProperty ;
+    rdfs:label "milk yield"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "MilkProduction" ;
+    gems:matchType "exact" ;
+    gems:unit "kg" ;
+    rdfs:comment "ATOL milk yield: amount of milk over a period from a lactating mammal."@en ;
+    skos:exactMatch atol:ATOL_0001518 .
+
+gems:col_milk_MilkProtein a owl:DatatypeProperty ;
+    rdfs:label "milk protein concentration"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "MilkProtein" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL milk protein concentration (ATOL_0001521). Gold stores % (concentration), not yield."@en ;
+    skos:exactMatch atol:ATOL_0001521 .
+
+gems:col_milk_MilkFat a owl:DatatypeProperty ;
+    rdfs:label "milk fat concentration"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "MilkFat" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL milk fat concentration (ATOL_0001520). Gold stores % (concentration), not yield."@en ;
+    skos:exactMatch atol:ATOL_0001520 .
+
+gems:col_milk_MilkLactose a owl:DatatypeProperty ;
+    rdfs:label "milk lactose concentration"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "MilkLactose" ;
+    gems:matchType "exact" ;
+    gems:unit "%" ;
+    rdfs:comment "ATOL milk lactose concentration (ATOL_0000619). Gold stores % (concentration), not yield."@en ;
+    skos:exactMatch atol:ATOL_0000619 .
+
+gems:col_milk_MilkUrea a owl:DatatypeProperty ;
+    rdfs:label "milk urea"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "MilkUrea" ;
+    gems:matchType "exact" ;
+    gems:unit "mg/dL" ;
+    rdfs:comment "ATOL milk urea (MUN)."@en ;
+    skos:exactMatch atol:ATOL_0000727 .
+
+gems:col_milk_MilkSomaticCellCount a owl:DatatypeProperty ;
+    rdfs:label "somatic cell count"@en ;
+    rdfs:domain gems:MilkObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "milk" ;
+    gems:fromColumn "MilkSomaticCellCount" ;
+    gems:matchType "exact" ;
+    gems:unit "cells/mL" ;
+    rdfs:comment "ATOL somatic cell count."@en ;
+    skos:exactMatch atol:ATOL_0000991 .
+
+gems:col_respirationchambermeasurement_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambermeasurement_AnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "study animal identifier"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "AnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local barn/study ID. Join with studyId. Not ATOL."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambermeasurement_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:date ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_respirationchambermeasurement_ChamberIdentification a owl:DatatypeProperty ;
+    rdfs:label "respiration chamber identifier"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ChamberIdentification" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Instrument/pen ID."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambermeasurement_ChamberOpenning a owl:DatatypeProperty ;
+    rdfs:label "chamber opening event/time"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:string ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ChamberOpenning" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Template spelling Openning; door/open event."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambermeasurement_TimeOfDay a owl:DatatypeProperty ;
+    rdfs:label "time of day"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:time ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "TimeOfDay" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Chamber clock time."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambermeasurement_FreshAirTemperature a owl:DatatypeProperty ;
+    rdfs:label "temperature"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "FreshAirTemperature" ;
+    gems:matchType "close" ;
+    gems:unit "°C" ;
+    rdfs:comment "PATO temperature of fresh/inlet air."@en ;
+    skos:closeMatch obo:PATO_0000146 .
+
+gems:col_respirationchambermeasurement_FreshAirRelativeHumidity a owl:DatatypeProperty ;
+    rdfs:label "relative humidity"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "FreshAirRelativeHumidity" ;
+    gems:matchType "close" ;
+    gems:unit "%" ;
+    rdfs:comment "Allotrope relative humidity of inlet/fresh air (instrument reading)."@en ;
+    skos:closeMatch <http://purl.allotrope.org/ontologies/result#AFR_0002614> .
+
+gems:col_respirationchambermeasurement_FreshAirMethane a owl:DatatypeProperty ;
+    rdfs:label "methane (inlet air)"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "FreshAirMethane" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI methane in inlet air (background), not animal emission."@en ;
+    skos:closeMatch obo:CHEBI_16183 .
+
+gems:col_respirationchambermeasurement_FreshAirCarbonDioxide a owl:DatatypeProperty ;
+    rdfs:label "carbon dioxide (inlet air)"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "FreshAirCarbonDioxide" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI carbon dioxide in inlet air (background)."@en ;
+    skos:closeMatch obo:CHEBI_16526 .
+
+gems:col_respirationchambermeasurement_FreshAirOxygen a owl:DatatypeProperty ;
+    rdfs:label "dioxygen (inlet air)"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "FreshAirOxygen" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI dioxygen in inlet air (background)."@en ;
+    skos:closeMatch obo:CHEBI_15379 .
+
+gems:col_respirationchambermeasurement_FreshAirHydrogen a owl:DatatypeProperty ;
+    rdfs:label "dihydrogen (inlet air)"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "FreshAirHydrogen" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI dihydrogen in inlet air (background)."@en ;
+    skos:closeMatch obo:CHEBI_18276 .
+
+gems:col_respirationchambermeasurement_ExtractedAirTemperature a owl:DatatypeProperty ;
+    rdfs:label "temperature"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirTemperature" ;
+    gems:matchType "close" ;
+    gems:unit "°C" ;
+    rdfs:comment "PATO temperature of exhaust air."@en ;
+    skos:closeMatch obo:PATO_0000146 .
+
+gems:col_respirationchambermeasurement_ExtractedAirRelativeHumidity a owl:DatatypeProperty ;
+    rdfs:label "relative humidity"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirRelativeHumidity" ;
+    gems:matchType "close" ;
+    gems:unit "%" ;
+    rdfs:comment "Allotrope relative humidity of exhaust air (instrument reading)."@en ;
+    skos:closeMatch <http://purl.allotrope.org/ontologies/result#AFR_0002614> .
+
+gems:col_respirationchambermeasurement_ExtractedAirFlowrate a owl:DatatypeProperty ;
+    rdfs:label "airflow rate"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirFlowrate" ;
+    gems:matchType "close" ;
+    rdfs:comment "NCIT airflow rate applied to chamber exhaust flow, not a clinical test."@en ;
+    skos:closeMatch obo:NCIT_C210166 .
+
+gems:col_respirationchambermeasurement_ExtractedAirEmittedCarbonDioxide a owl:DatatypeProperty ;
+    rdfs:label "carbon dioxide"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirEmittedCarbonDioxide" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI carbon dioxide outlet field; confirm vs CarbonDioxideEmission."@en ;
+    skos:closeMatch obo:CHEBI_16526 .
+
+gems:col_respirationchambermeasurement_ExtractedAirPressure a owl:DatatypeProperty ;
+    rdfs:label "pressure"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirPressure" ;
+    gems:matchType "close" ;
+    rdfs:comment "PATO pressure of exhaust air."@en ;
+    skos:closeMatch obo:PATO_0001025 .
+
+gems:col_respirationchambermeasurement_ExtractedAirMethane a owl:DatatypeProperty ;
+    rdfs:label "methane (outlet air)"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirMethane" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI methane in chamber exhaust; concentration/related field, not MethaneEmission."@en ;
+    skos:closeMatch obo:CHEBI_16183 .
+
+gems:col_respirationchambermeasurement_MethaneEmission a owl:DatatypeProperty ;
+    rdfs:label "digestive methane production"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "MethaneEmission" ;
+    gems:matchType "close" ;
+    gems:unit "L/min" ;
+    rdfs:comment "analyte=CHEBI:16183; quality=PATO:0002244; trait=ATOL_0001391 (close: chamber CH4 emission vs GreenFeed mass flow)."@en ;
+    skos:closeMatch atol:ATOL_0001391 ;
+    gems:hasAnalyte obo:CHEBI_16183 ;
+    gems:hasQuality obo:PATO_0002244 ;
+    gems:hasTrait atol:ATOL_0001391 .
+
+gems:col_respirationchambermeasurement_ExtractedAirCarbonDioxde a owl:DatatypeProperty ;
+    rdfs:label "carbon dioxide (outlet air)"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirCarbonDioxde" ;
+    gems:matchType "close" ;
+    rdfs:comment "Template spelling CarbonDioxde. CHEBI carbon dioxide in exhaust; not CarbonDioxideEmission."@en ;
+    skos:closeMatch obo:CHEBI_16526 .
+
+gems:col_respirationchambermeasurement_CarbonDioxideEmission a owl:DatatypeProperty ;
+    rdfs:label "digestive carbon dioxide production"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "CarbonDioxideEmission" ;
+    gems:matchType "close" ;
+    gems:unit "L/min" ;
+    rdfs:comment "analyte=CHEBI:16526; quality=PATO:0002244; trait=ATOL_0001392 (close: chamber CO2 is mixed respiratory+digestive, not gut-only)."@en ;
+    skos:closeMatch atol:ATOL_0001392 ;
+    gems:hasAnalyte obo:CHEBI_16526 ;
+    gems:hasQuality obo:PATO_0002244 ;
+    gems:hasTrait atol:ATOL_0001392 .
+
+gems:col_respirationchambermeasurement_ExtractedAirOxygen a owl:DatatypeProperty ;
+    rdfs:label "dioxygen (outlet air)"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirOxygen" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI dioxygen in exhaust."@en ;
+    skos:closeMatch obo:CHEBI_15379 .
+
+gems:col_respirationchambermeasurement_OxygenConsumption a owl:DatatypeProperty ;
+    rdfs:label "oxygen consumption"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "OxygenConsumption" ;
+    gems:matchType "close" ;
+    gems:unit "L/min" ;
+    rdfs:comment "analyte=CHEBI:15379; quality=PATO:0002244; trait=CMO_0002169 (close: chamber VO2). Prefer this column over GreenFeed O2 for oxygen consumption."@en ;
+    skos:closeMatch obo:CMO_0002169 ;
+    gems:hasAnalyte obo:CHEBI_15379 ;
+    gems:hasQuality obo:PATO_0002244 ;
+    gems:hasTrait obo:CMO_0002169 .
+
+gems:col_respirationchambermeasurement_ExtractedAirHydrogen a owl:DatatypeProperty ;
+    rdfs:label "dihydrogen (outlet air)"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ExtractedAirHydrogen" ;
+    gems:matchType "close" ;
+    rdfs:comment "CHEBI dihydrogen in exhaust."@en ;
+    skos:closeMatch obo:CHEBI_18276 .
+
+gems:col_respirationchambermeasurement_ChamberDifferentialPressure a owl:DatatypeProperty ;
+    rdfs:label "pressure"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "ChamberDifferentialPressure" ;
+    gems:matchType "close" ;
+    rdfs:comment "PATO pressure (differential)."@en ;
+    skos:closeMatch obo:PATO_0001025 .
+
+gems:col_respirationchambermeasurement_FeedBinWeight a owl:DatatypeProperty ;
+    rdfs:label "feed offered / bin weight"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "FeedBinWeight" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Remaining/offered feed mass in the chamber bin; not DMI. Keep GEMS-local."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambermeasurement_WaterTroughVolume a owl:DatatypeProperty ;
+    rdfs:label "water"@en ;
+    rdfs:domain gems:ChamberObservation ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambermeasurement" ;
+    gems:fromColumn "WaterTroughVolume" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Volume of water in the trough, not ATOL water intake. Keep GEMS-local."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambersettings_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:ChamberCalibration ;
+    rdfs:range xsd:string ;
+    gems:fromTable "respirationchambersettings" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambersettings_Date a owl:DatatypeProperty ;
+    rdfs:label "Date"@en ;
+    rdfs:domain gems:ChamberCalibration ;
+    rdfs:range xsd:date ;
+    gems:fromTable "respirationchambersettings" ;
+    gems:fromColumn "Date" ;
+    gems:matchType "close" ;
+    rdfs:comment "LHO V1.5 Date. Observation day of the animal x day spine; close, not exact. xsd:date."@en ;
+    skos:closeMatch lho:Date .
+
+gems:col_respirationchambersettings_ChamberIdentification a owl:DatatypeProperty ;
+    rdfs:label "respiration chamber identifier"@en ;
+    rdfs:domain gems:ChamberCalibration ;
+    rdfs:range xsd:string ;
+    gems:fromTable "respirationchambersettings" ;
+    gems:fromColumn "ChamberIdentification" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Instrument/pen ID."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambersettings_MethaneRecoveryRate a owl:DatatypeProperty ;
+    rdfs:label "chamber CH4 recovery rate"@en ;
+    rdfs:domain gems:ChamberCalibration ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambersettings" ;
+    gems:fromColumn "MethaneRecoveryRate" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Calibration/recovery, not animal emission."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambersettings_CarbonDioxideRecoveryRate a owl:DatatypeProperty ;
+    rdfs:label "chamber CO2 recovery rate"@en ;
+    rdfs:domain gems:ChamberCalibration ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambersettings" ;
+    gems:fromColumn "CarbonDioxideRecoveryRate" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Calibration/recovery."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_respirationchambersettings_OxygenRecoveryRate a owl:DatatypeProperty ;
+    rdfs:label "chamber O2 recovery rate"@en ;
+    rdfs:domain gems:ChamberCalibration ;
+    rdfs:range xsd:double ;
+    gems:fromTable "respirationchambersettings" ;
+    gems:fromColumn "OxygenRecoveryRate" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Calibration/recovery."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedanimalcrosswalk_studyId a owl:DatatypeProperty ;
+    rdfs:label "study identifier"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedanimalcrosswalk" ;
+    gems:fromColumn "studyId" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Local accession (e.g. 009) for a GEMS Study. The Study class is OBI investigation; this column is only the ID string, not the investigation itself."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedanimalcrosswalk_Farm_Name a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed Farm_Name (intended AnimalIdentifier)"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedanimalcrosswalk" ;
+    gems:fromColumn "Farm_Name" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "As recorded on the visit. Keep the raw string; the match result is canonicalAnimalIdentifier."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedanimalcrosswalk_RFID a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed recorded RFID"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedanimalcrosswalk" ;
+    gems:fromColumn "RFID" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Visit RFID; part of the visit key with studyId and Start_Time."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedanimalcrosswalk_Start_Time a owl:DatatypeProperty ;
+    rdfs:label "visit start timestamp"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:dateTime ;
+    gems:fromTable "greenfeedanimalcrosswalk" ;
+    gems:fromColumn "Start_Time" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "GreenFeed visit start; part of the visit key."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedanimalcrosswalk_canonicalAnimalIdentifier a owl:DatatypeProperty ;
+    rdfs:label "canonical study animal identifier"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedanimalcrosswalk" ;
+    gems:fromColumn "canonicalAnimalIdentifier" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "Resolved AnimalIdentifier for the visit (same studyId). Join milk, intake, body weight, digestibility, or design on this, not raw Farm_Name. Empty when matchOk is false."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedanimalcrosswalk_matchMethod a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed ID match method"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:string ;
+    gems:fromTable "greenfeedanimalcrosswalk" ;
+    gems:fromColumn "matchMethod" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "How the visit was linked: exact (Farm_Name or RFID equals the workbook ID), sequence (the workbook ID is inside Farm_Name or RFID), rfidEnd (the visit RFID is the end of the workbook RFID, e.g. a replacement tag), ambiguous (two animals tie, not linked), unmatched."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedanimalcrosswalk_matchOk a owl:DatatypeProperty ;
+    rdfs:label "GreenFeed animal match succeeded"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:boolean ;
+    gems:fromTable "greenfeedanimalcrosswalk" ;
+    gems:fromColumn "matchOk" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "true when canonicalAnimalIdentifier is set. Unmatched visits are kept."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
+
+gems:col_greenfeedanimalcrosswalk_inDesignWindow a owl:DatatypeProperty ;
+    rdfs:label "visit within experimental design window"@en ;
+    rdfs:domain gems:GreenFeedVisit ;
+    rdfs:range xsd:boolean ;
+    gems:fromTable "greenfeedanimalcrosswalk" ;
+    gems:fromColumn "inDesignWindow" ;
+    gems:matchType "GEMS-only" ;
+    rdfs:comment "True when the visit date falls inside the study's experimental design dates."@en ;
+    rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
