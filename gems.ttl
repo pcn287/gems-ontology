@@ -22,9 +22,9 @@
     dct:title "GEMS GreenFeed Emissions Measurement System ontology"@en ;
     dct:description "Classes, properties and links for the GEMS database of enteric methane measurements made with GreenFeed systems, with the animal, diet, intake and milk records collected alongside them. Columns are mapped to public ontology terms where a match exists."@en ;
     dct:creator "Puchun Niu" ,
-        "Miel Hostens" ,
-        "Hanlu Zhang" ;
-    dct:bibliographicCitation "Niu P, Hostens M, Zhang H. GEMS ontology, version 0.2.0. https://w3id.org/gems/ontology" ;
+        "Hanlu Zhang" ,
+        "Miel Hostens" ;
+    dct:bibliographicCitation "Niu P, Zhang H, Hostens M. GEMS ontology, version 0.2.0. https://w3id.org/gems/ontology" ;
     dct:license <https://creativecommons.org/licenses/by/4.0/> ;
     dct:issued "2026-11-10"^^xsd:date ;
     owl:versionIRI <https://w3id.org/gems/ontology/0.2.0> ;

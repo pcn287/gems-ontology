@@ -7,7 +7,7 @@ The GEMS ontology describes what the tables of the GEMS database mean. GEMS (Gre
 - **Version:** 0.2.0 (`https://w3id.org/gems/ontology/0.2.0`)
 - **File:** [`gems.ttl`](gems.ttl) (OWL in Turtle)
 - **Licence:** [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
-- **Creators:** Puchun Niu, Miel Hostens, Hanlu Zhang
+- **Creators:** Puchun Niu, Hanlu Zhang, Miel Hostens
 
 ## What is in it
 
@@ -27,4 +27,4 @@ This file holds no animal data. Records in the GEMS knowledge graph use IDs unde
 
 ## Citing
 
-Niu P, Hostens M, Zhang H. GEMS ontology, version 0.2.0. https://w3id.org/gems/ontology
+Niu P, Zhang H, Hostens M. GEMS ontology, version 0.2.0. https://w3id.org/gems/ontology
