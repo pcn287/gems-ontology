@@ -24,11 +24,11 @@
     dct:creator "Puchun Niu" ,
         "Hanlu Zhang" ,
         "Miel Hostens" ;
-    dct:bibliographicCitation "Niu P, Zhang H, Hostens M. GEMS ontology, version 0.2.0. https://w3id.org/gems/ontology" ;
+    dct:bibliographicCitation "Niu P, Zhang H, Hostens M. GEMS ontology, version 0.2.1. https://w3id.org/gems/ontology" ;
     dct:license <https://creativecommons.org/licenses/by/4.0/> ;
-    dct:issued "2026-11-10"^^xsd:date ;
-    owl:versionIRI <https://w3id.org/gems/ontology/0.2.0> ;
-    owl:versionInfo "0.2.0" ;
+    dct:issued "2026-11-11"^^xsd:date ;
+    owl:versionIRI <https://w3id.org/gems/ontology/0.2.1> ;
+    owl:versionInfo "0.2.1" ;
     vann:preferredNamespacePrefix "gems" ;
     vann:preferredNamespaceUri "https://w3id.org/gems/ontology#" .
 
@@ -38,7 +38,7 @@
 
 gems:fromTable a owl:AnnotationProperty ;
     rdfs:label "from table"@en ;
-    rdfs:comment "Gold table name (lowercase, no spaces)."@en .
+    rdfs:comment "Name of the GEMS table the column belongs to (lowercase, no spaces)."@en .
 
 gems:fromColumn a owl:AnnotationProperty ;
     rdfs:label "from column"@en .
@@ -49,7 +49,7 @@ gems:matchType a owl:AnnotationProperty ;
 
 gems:unit a owl:AnnotationProperty ;
     rdfs:label "unit"@en ;
-    rdfs:comment "Unit of the values, as given in the gold units row or the column name (e.g. kg, g/d, %)."@en .
+    rdfs:comment "Unit of the values, as recorded with the data or in the column name (e.g. kg, g/d, %)."@en .
 
 gems:hasAnalyte a owl:AnnotationProperty ;
     rdfs:label "has analyte"@en ;
@@ -87,11 +87,11 @@ gems:Diet a owl:Class ;
 gems:DietComponent a owl:Class ;
     rdfs:label "diet ingredient"@en ;
     rdfs:subClassOf obo:FOODON_00002403 ;
-    rdfs:comment "One ingredient of a treatment diet, with its proportion and nutrient content (goldfeedcomponents row)."@en .
+    rdfs:comment "One ingredient of a treatment diet, with its proportion and nutrient content."@en .
 
 gems:DietNutrientRecord a owl:Class ;
     rdfs:label "diet nutrient composition"@en ;
-    rdfs:comment "Nutrient composition of a treatment diet on a date (golddietnutrientcomposition row)."@en .
+    rdfs:comment "Nutrient composition of a treatment diet on a date."@en .
 
 gems:BaitPellet a owl:Class ;
     rdfs:label "GreenFeed bait pellet"@en ;
@@ -100,7 +100,7 @@ gems:BaitPellet a owl:Class ;
 gems:BaitPelletComponent a owl:Class ;
     rdfs:label "bait pellet ingredient"@en ;
     rdfs:subClassOf obo:FOODON_00002403 ;
-    rdfs:comment "One ingredient of the GreenFeed bait pellet (goldgreenfeedpelletcomponents row)."@en .
+    rdfs:comment "One ingredient of the GreenFeed bait pellet."@en .
 
 gems:Observation a owl:Class ;
     rdfs:label "observation"@en ;
@@ -115,41 +115,41 @@ gems:AnimalDayObservation a owl:Class ;
 gems:MilkObservation a owl:Class ;
     rdfs:label "milk observation"@en ;
     rdfs:subClassOf gems:AnimalDayObservation ;
-    rdfs:comment "Milk yield and composition of one animal on one date, or one milking when MilkingTime is given (goldmilk row)."@en .
+    rdfs:comment "Milk yield and composition of one animal on one date, or one milking when MilkingTime is given."@en .
 
 gems:BodyWeightObservation a owl:Class ;
     rdfs:label "body weight observation"@en ;
     rdfs:subClassOf gems:AnimalDayObservation ;
-    rdfs:comment "Body weight of one animal on one date (goldbodyweight row)."@en .
+    rdfs:comment "Body weight of one animal on one date."@en .
 
 gems:IntakeDayObservation a owl:Class ;
     rdfs:label "daily intake observation"@en ;
     rdfs:subClassOf gems:AnimalDayObservation ;
-    rdfs:comment "Feed and water intake of one animal on one date (goldintakeperday row)."@en .
+    rdfs:comment "Feed and water intake of one animal on one date."@en .
 
 gems:DigestibilityObservation a owl:Class ;
     rdfs:label "digestibility observation"@en ;
     rdfs:subClassOf gems:AnimalDayObservation ;
-    rdfs:comment "Apparent digestibility and fecal/urine output of one animal for a collection date (golddigestibility row)."@en .
+    rdfs:comment "Apparent digestibility and fecal/urine output of one animal for a collection date."@en .
 
 gems:IntakeEvent a owl:Class ;
     rdfs:label "feeding event"@en ;
     rdfs:subClassOf gems:Observation ;
-    rdfs:comment "One feeding event of one animal (goldintakeintraday row)."@en .
+    rdfs:comment "One feeding event of one animal."@en .
 
 gems:GreenFeedVisit a owl:Class ;
     rdfs:label "GreenFeed visit"@en ;
     rdfs:subClassOf gems:Observation ;
-    rdfs:comment "One visit of an animal to a GreenFeed unit, identified by studyId + RFID + Start_Time (goldgreenfeedrawvisitationdata row plus the matching goldgreenfeedanimalcrosswalk columns). Linked to an animal only when matchOk is true; the link uses canonicalAnimalIdentifier, never the raw Farm_Name. Do not owl:sameAs raw strings."@en .
+    rdfs:comment "One visit of an animal to a GreenFeed unit, identified by studyId + RFID + Start_Time. Linked to an animal only when matchOk is true; the link uses canonicalAnimalIdentifier, never the raw Farm_Name. Do not owl:sameAs raw strings."@en .
 
 gems:ChamberObservation a owl:Class ;
     rdfs:label "respiration chamber observation"@en ;
     rdfs:subClassOf gems:Observation ;
-    rdfs:comment "One respiration chamber reading of one animal at a time of day (goldrespirationchambermeasurement row)."@en .
+    rdfs:comment "One respiration chamber reading of one animal at a time of day."@en .
 
 gems:DesignRecord a owl:Class ;
     rdfs:label "experimental design record"@en ;
-    rdfs:comment "Experimental design of one animal on one date: treatment, period, phase, housing and feeding (goldexperimentaldesign row)."@en .
+    rdfs:comment "Experimental design of one animal on one date: treatment, period, phase, housing and feeding."@en .
 
 gems:Instrument a owl:Class ;
     rdfs:label "instrument"@en ;
@@ -158,7 +158,7 @@ gems:Instrument a owl:Class ;
 gems:GreenFeedUnit a owl:Class ;
     rdfs:label "GreenFeed unit"@en ;
     rdfs:subClassOf gems:Instrument ;
-    rdfs:comment "One GreenFeed unit used in a study, with its settings (goldgreenfeedsettings row)."@en .
+    rdfs:comment "One GreenFeed unit used in a study, with its settings."@en .
 
 gems:RespirationChamber a owl:Class ;
     rdfs:label "respiration chamber"@en ;
@@ -167,7 +167,7 @@ gems:RespirationChamber a owl:Class ;
 
 gems:ChamberCalibration a owl:Class ;
     rdfs:label "respiration chamber recovery test"@en ;
-    rdfs:comment "Gas recovery test of one respiration chamber on one date (goldrespirationchambersettings row)."@en .
+    rdfs:comment "Gas recovery test of one respiration chamber on one date."@en .
 
 # Reused public classes. The IRI stays as published; Protégé shows rdfs:label, not the ID string.
 obo:OBI_0000066 a owl:Class ;
@@ -239,7 +239,7 @@ gems:isOpenData a owl:DatatypeProperty ;
     rdfs:label "is open data"@en ;
     rdfs:domain gems:Study ;
     rdfs:range xsd:boolean ;
-    rdfs:comment "True when the study's contributor agreed to open release (gold_v1.goldstudyaccess)."@en .
+    rdfs:comment "True when the study's contributor agreed to open release."@en .
 
 gems:animalIdentifier a owl:DatatypeProperty ;
     rdfs:label "AnimalIdentifier"@en ;
@@ -247,8 +247,8 @@ gems:animalIdentifier a owl:DatatypeProperty ;
     rdfs:range xsd:string ;
     rdfs:comment "Study animal ID. Unique only together with studyId."@en .
 
-# Identifier matching is data hygiene on goldgreenfeedanimalcrosswalk, always inside one studyId.
-# Do not rewrite Farm_Name on goldgreenfeedrawvisitationdata. A reasoner will not infer padded IDs.
+# Identifier matching is data hygiene on the GreenFeed animal crosswalk, always inside one studyId.
+# Do not rewrite Farm_Name on the GreenFeed visit table. A reasoner will not infer padded IDs.
 
 #################################################################
 # Column properties (generated from column_term_map.xlsx and table_map.xlsx)
@@ -414,7 +414,7 @@ gems:col_bodyweight_BodyWeight a owl:DatatypeProperty ;
     gems:fromColumn "BodyWeight" ;
     gems:matchType "close" ;
     gems:unit "kg" ;
-    rdfs:comment "LHO V1.5 Weight (measurement type). LHO has no body-weight term, so close. Gold unit legend row __UNITS__ gives the unit."@en ;
+    rdfs:comment "LHO V1.5 Weight (measurement type). LHO has no body-weight term, so close. The unit is given with the data."@en ;
     skos:closeMatch lho:Weight .
 
 gems:col_dietnutrientcomposition_studyId a owl:DatatypeProperty ;
@@ -726,7 +726,7 @@ gems:col_digestibility_FecalNitrogen a owl:DatatypeProperty ;
     gems:fromColumn "FecalNitrogen" ;
     gems:matchType "close" ;
     gems:unit "g/d" ;
-    rdfs:comment "ATOL feces nitrogen content (ATOL_0001419). Close, not exact: gold stores g/d (daily output), ATOL term is content. Not CHEBI nitrogen atom."@en ;
+    rdfs:comment "ATOL feces nitrogen content (ATOL_0001419). Close, not exact: GEMS records g/d (daily output), ATOL term is content. Not CHEBI nitrogen atom."@en ;
     skos:closeMatch atol:ATOL_0001419 .
 
 gems:col_digestibility_UrineNitrogen a owl:DatatypeProperty ;
@@ -737,7 +737,7 @@ gems:col_digestibility_UrineNitrogen a owl:DatatypeProperty ;
     gems:fromColumn "UrineNitrogen" ;
     gems:matchType "close" ;
     gems:unit "g/d" ;
-    rdfs:comment "ATOL urine nitrogen content (ATOL_0001509), under urine nitrogenous component content. Close, not exact: gold stores g/d (daily output), ATOL term is content."@en ;
+    rdfs:comment "ATOL urine nitrogen content (ATOL_0001509), under urine nitrogenous component content. Close, not exact: GEMS records g/d (daily output), ATOL term is content."@en ;
     skos:closeMatch atol:ATOL_0001509 .
 
 gems:col_digestibility_UrineCarbon a owl:DatatypeProperty ;
@@ -1143,7 +1143,7 @@ gems:col_greenfeedrawvisitationdata_Farm_Name a owl:DatatypeProperty ;
     gems:fromTable "greenfeedrawvisitationdata" ;
     gems:fromColumn "Farm_Name" ;
     gems:matchType "GEMS-only" ;
-    rdfs:comment "Intended AnimalIdentifier. Do not join this raw string to milk/intake/bodyweight. Use goldgreenfeedanimalcrosswalk.canonicalAnimalIdentifier. Do not OWL-equate raw strings."@en ;
+    rdfs:comment "Intended AnimalIdentifier. Do not join this raw string to milk/intake/bodyweight. Use canonicalAnimalIdentifier from the GreenFeed animal crosswalk. Do not OWL-equate raw strings."@en ;
     rdfs:isDefinedBy <https://w3id.org/gems/ontology> .
 
 gems:col_greenfeedrawvisitationdata_FID a owl:DatatypeProperty ;
@@ -1782,7 +1782,7 @@ gems:col_milk_MilkProtein a owl:DatatypeProperty ;
     gems:fromColumn "MilkProtein" ;
     gems:matchType "exact" ;
     gems:unit "%" ;
-    rdfs:comment "ATOL milk protein concentration (ATOL_0001521). Gold stores % (concentration), not yield."@en ;
+    rdfs:comment "ATOL milk protein concentration (ATOL_0001521). GEMS records % (concentration), not yield."@en ;
     skos:exactMatch atol:ATOL_0001521 .
 
 gems:col_milk_MilkFat a owl:DatatypeProperty ;
@@ -1793,7 +1793,7 @@ gems:col_milk_MilkFat a owl:DatatypeProperty ;
     gems:fromColumn "MilkFat" ;
     gems:matchType "exact" ;
     gems:unit "%" ;
-    rdfs:comment "ATOL milk fat concentration (ATOL_0001520). Gold stores % (concentration), not yield."@en ;
+    rdfs:comment "ATOL milk fat concentration (ATOL_0001520). GEMS records % (concentration), not yield."@en ;
     skos:exactMatch atol:ATOL_0001520 .
 
 gems:col_milk_MilkLactose a owl:DatatypeProperty ;
@@ -1804,7 +1804,7 @@ gems:col_milk_MilkLactose a owl:DatatypeProperty ;
     gems:fromColumn "MilkLactose" ;
     gems:matchType "exact" ;
     gems:unit "%" ;
-    rdfs:comment "ATOL milk lactose concentration (ATOL_0000619). Gold stores % (concentration), not yield."@en ;
+    rdfs:comment "ATOL milk lactose concentration (ATOL_0000619). GEMS records % (concentration), not yield."@en ;
     skos:exactMatch atol:ATOL_0000619 .
 
 gems:col_milk_MilkUrea a owl:DatatypeProperty ;
