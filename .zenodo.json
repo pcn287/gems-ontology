@@ -1,0 +1,15 @@
+{
+  "title": "GEMS ontology: GreenFeed Emissions Measurement System",
+  "upload_type": "dataset",
+  "description": "OWL ontology (Turtle) describing the tables of the GEMS database of enteric methane measurements made with GreenFeed systems, with the animal, diet, intake and milk records collected alongside them. Columns are mapped to public ontology terms (LHO, ATOL, ChEBI, PATO, CMO, FoodOn, ENVO, OBI, TO, LBO, NCIT) where a match exists. Ontology IRI: https://w3id.org/gems/ontology. The file holds no animal data.",
+  "creators": [
+    {"name": "Niu, Puchun"},
+    {"name": "Zhang, Hanlu"},
+    {"name": "Hostens, Miel"}
+  ],
+  "license": "cc-by-4.0",
+  "keywords": ["ontology", "OWL", "enteric methane", "GreenFeed", "dairy cattle", "beef cattle", "livestock", "FAIR data"],
+  "related_identifiers": [
+    {"identifier": "https://w3id.org/gems/ontology", "relation": "isAlternateIdentifier", "scheme": "url"}
+  ]
+}
